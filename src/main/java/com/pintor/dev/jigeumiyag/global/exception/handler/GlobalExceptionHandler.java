@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         log.warn("[ApiException] {} status: {}, code: {}, message: {}",
                 errorCode.name(), errorCode.getStatus().value(), errorCode.getCode(), errorCode.getMessage());
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), errorCode.getMessage())));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode)));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
         log.warn("[NoResourceFound] status: {}, code: {}, message: {}",
                 errorCode.getStatus().value(), errorCode.getCode(), e.getMessage());
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), errorCode.getMessage())));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode)));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
         log.warn("[MethodNotSupported] status: {}, code: {}, message: {}",
                 errorCode.getStatus().value(), errorCode.getCode(), e.getMessage());
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), errorCode.getMessage())));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode)));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -58,19 +58,20 @@ public class GlobalExceptionHandler {
         log.warn("[MessageNotReadable] status: {}, code: {}, message: {}",
                 errorCode.getStatus().value(), errorCode.getCode(), e.getMessage());
         return ResponseEntity.badRequest()
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), errorCode.getMessage())));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode)));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<ErrorResponse>> handleTypeMismatchException(MethodArgumentTypeMismatchException e) {
         ErrorCode errorCode = COMMON_INVALID_REQUEST;
-        String detail = String.format("%s: %s 타입이어야 합니다.",
+        Map<String, String> details = Map.of(
                 e.getName(),
-                e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "unknown");
-        log.warn("[ArgumentTypeMismatch] status: {}, code: {}, detail: {}",
-                errorCode.getStatus().value(), errorCode.getCode(), detail);
+                String.format("%s 타입이어야 합니다.", e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "unknown")
+        );
+        log.warn("[ArgumentTypeMismatch] status: {}, code: {}, details: {}",
+                errorCode.getStatus().value(), errorCode.getCode(), details);
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), detail)));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode, details)));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -85,7 +86,7 @@ public class GlobalExceptionHandler {
         log.warn("[ArgumentNotValid] status: {}, code: {}, details: {}",
                 errorCode.getStatus().value(), errorCode.getCode(), details);
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), "입력값이 유효하지 않습니다.", details)));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode, details)));
     }
 
     @ExceptionHandler(ClientAbortException.class)
@@ -100,6 +101,6 @@ public class GlobalExceptionHandler {
                 e.getClass().getSimpleName(),
                 e.getCause() != null ? e.getCause().getMessage() : e.getMessage(), e);
         return ResponseEntity.internalServerError()
-                .body(ApiResponse.fail(ErrorResponse.of(errorCode.getStatus().value(), errorCode.getCode(), errorCode.getMessage())));
+                .body(ApiResponse.fail(ErrorResponse.of(errorCode)));
     }
 }
